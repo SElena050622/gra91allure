@@ -30,6 +30,11 @@ public class DataGenerator {
         return faker.phoneNumber().phoneNumber();
     }
 
+    public static String generaterWrongPhone(String locale) {
+        var faker = new Faker(new Locale(locale));
+        return faker.phoneNumber().phoneNumber();
+    }
+
     public static class Registration {
         private Registration() {
         }

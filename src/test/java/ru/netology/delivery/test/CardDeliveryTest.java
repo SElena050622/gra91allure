@@ -1,6 +1,7 @@
 package ru.netology.delivery.test;
 
 import com.codeborne.selenide.logevents.SelenideLogger;
+import io.qameta.allure.selenide.AllureSelenide;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,24 +17,23 @@ import static com.codeborne.selenide.Selenide.*;
 import static ru.netology.delivery.data.DataGenerator.Registration.generateUser;
 
 class CardDeliveryTest {
+    private final DataGenerator.UserInfo validUser = generateUser("ru");
+    private final int daysToAddForFirstMeeting = 4;
+    private final String firstMeetingDate = DataGenerator.generateDate(daysToAddForFirstMeeting);
+
     @BeforeEach
-    static void setUpAll() {
+    void setUpAll() {
         SelenideLogger.addListener("allure", new AllureSelenide());
     }
     @AfterEach
-    static void tearDownAll() {
-        SelenideLogger.removeListener('allure');
+    void tearDownAll() {
+        SelenideLogger.removeListener("allure");
     }
     @BeforeEach
     void setup() { open("http://localhost:9999"); }
     @Test
     @DisplayName("Should successful plan meeting")
     void shouldSuccessPlanMeeting() {
-        DataGenerator.UserInfo validUser = generateUser("ru");
-        int daysToAddForFirstMeeting = 4;
-        String firstMeetingDate = DataGenerator.generateDate(daysToAddForFirstMeeting);
-        int daysToAddForSecondMeeting = 7;
-        String secondMeetingDate = DataGenerator.generateDate(daysToAddForSecondMeeting);
         $("[data-test-id=city] input").setValue(validUser.getCity());
         $("[data-test-id=date] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
         $("[data-test-id=date] input").setValue(firstMeetingDate);
@@ -44,17 +44,19 @@ class CardDeliveryTest {
         $(byText("Успешно!")).shouldBe(visible, Duration.ofSeconds(15));
         $("[data-test-id='success-notification'] .notification__content")
                 .shouldHave(exactText("Встреча успешно запланирована на " + firstMeetingDate));
+    }
+    @Test
+    @DisplayName("Should get error message if entered wrong phone number")
+    void shouldGetErrorWrongPhone() {
+        $("[data-test-id=city] input").setValue(validUser.getCity());
         $("[data-test-id=date] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        $("[data-test-id=date] input").setValue(secondMeetingDate);
+        $("[data-test-id=date] input").setValue(firstMeetingDate);
+        $("[data-test-id=name] input").setValue(validUser.getName());
+        $("[data-test-id=phone] input").setValue(DataGenerator.generaterWrongPhone("en"));
+        $("[data-test-id=agreement]").click();
         $(byText("Запланировать")).click();
-        $("[data-test-id=replan-notification] .notification__title")
-                .shouldHave(exactText("Необходимо подтверждение"));
-        $("[data-test-id=replan-notification] .notification__content")
-                .shouldHave(text("У вас уже запланирована встреча на другую дату. Перепланировать?"));
-        $("[data-test-id='replan-notification'] button.button").click();
-        $("[data-test-id=success-notification] .notification__title")
-                .shouldHave(exactText("Успешно!"));
-        $("[data-test-id=success-notification] .notification__content")
-                .shouldHave(exactText("Встреча успешно запланирована на " + secondMeetingDate));
+        //$(byText("Успешно!")).shouldBe(visible, Duration.ofSeconds(15));
+        $("[data-test-id=phone] .input__sub")
+                .shouldHave(text("На указанный номер моб. тел. будет отправлен смс-код для подтверждения заявки на карту. Проверьте, что номер ваш и введен корректно."));
     }
 }

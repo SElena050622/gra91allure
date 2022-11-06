@@ -7,13 +7,12 @@ group 'ru.netology'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 11
-
 compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 
 allure {
     version = '2.16.1'
-    useJUnitS {
+    useJUnit5 {
         version = '2.16.1'
     }
 }
